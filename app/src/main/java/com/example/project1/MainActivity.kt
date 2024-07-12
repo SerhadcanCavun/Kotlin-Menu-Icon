@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,15 +28,18 @@ class MainActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.rv)
 
         val iconList = listOf(
-            IconItem(R.drawable.icon_logo, "WIFI"),
-            IconItem(R.drawable.icon_logo2, "VOLUME"),
-            IconItem(R.drawable.icon_logo3, "BLUETOOTH"),
-            IconItem(R.drawable.icon_logo4, "ROTATE"),
-            IconItem(R.drawable.icon_logo5, "PLANE MOD"),
-            IconItem(R.drawable.icon_logo6, "LIGHT"),
-            IconItem(R.drawable.icon_logo7, "POWER MODE"),
-            IconItem(R.drawable.icon_logo8, "CELLULAR"),
-            IconItem(R.drawable.icon_logo9, "BLUE LIGHT FILTER"),
+            IconItem(R.drawable.icon_wifi_on, "Wifi"),
+            IconItem(R.drawable.icon_normal, "Normal"),
+            IconItem(R.drawable.icon_oto_rotate, "Rotate"),
+            IconItem(R.drawable.icon_bluetooth_on, "Bluetooth"),
+            IconItem(R.drawable.icon_airplane_on, "Airplane Mod"),
+            IconItem(R.drawable.icon_light_on, "Light Off"),
+            IconItem(R.drawable.icon_power_mode, "Power Mode"),
+            IconItem(R.drawable.icon_cellular_on, "Cellular"),
+            IconItem(R.drawable.icon_blue_light_filter, "Night Light"),
+            IconItem(R.drawable.icon_wifi_tethering_on, "Hotspot"),
+            IconItem(R.drawable.icon_qr_code_scanner, "Qr Scanner"),
+            IconItem(R.drawable.icon_location_on, "Location"),
         )
 
         recyclerView.layoutManager = GridLayoutManager(this, 4)
