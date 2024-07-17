@@ -1,6 +1,7 @@
 import android.content.Context
 import android.content.Intent
 import android.app.NotificationManager
+import android.graphics.Color
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
@@ -11,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.project1.R
 import com.example.project1.IconItem
@@ -51,7 +53,7 @@ class IconAdapter(
             when (iconItem.text) {
                 "Wifi" -> openWifiSettings()
                 "Bluetooth" -> openBluetoothSetting()
-                "Light On", "Light Off" -> toggleLight(holder, iconItem)
+                "Light" -> toggleLight(holder, iconItem)
                 "Normal", "Vibration", "Silent" -> toggleSoundMode(holder, iconItem)
                 "Rotate", "Portrait" -> toggleRotateMode(holder, iconItem)
                 "Airplane Mod" -> openAirplaneModeSettings()
@@ -76,18 +78,17 @@ class IconAdapter(
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             val cameraId = cameraManager.cameraIdList[0]
-            isFlashOn = !isFlashOn
             cameraManager.setTorchMode(cameraId, isFlashOn)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
-
-        if (isFlashOn) {
-            iconItem.iconResId = R.drawable.icon_light_off
-            iconItem.text = "Light Off"
-        } else {
-            iconItem.iconResId = R.drawable.icon_light_on
-            iconItem.text = "Light On"
+        if(isFlashOn){
+            iconItem.backgroundColor = Color.CYAN
+            isFlashOn = false
+        }
+        else{
+            iconItem.backgroundColor = Color.WHITE
+            isFlashOn = true
         }
         holder.bind(iconItem)
     }
@@ -103,21 +104,23 @@ class IconAdapter(
                 soundMode = SoundMode.VIBRATION
                 iconItem.iconResId = R.drawable.icon_vibration // Vibration icon
                 iconItem.text = "Vibration"
+                iconItem.backgroundColor = Color.CYAN
             }
             SoundMode.VIBRATION -> {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
                 soundMode = SoundMode.SILENT
                 iconItem.iconResId = R.drawable.icon_silent // Mute icon
                 iconItem.text = "Silent"
+                iconItem.backgroundColor = Color.WHITE
             }
             SoundMode.SILENT -> {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
                 soundMode = SoundMode.NORMAL
                 iconItem.iconResId = R.drawable.icon_normal // Normal icon
                 iconItem.text = "Normal"
+                iconItem.backgroundColor = Color.CYAN
             }
         }
-        // Notify the adapter that the item has changed to trigger a UI update
         holder.bind(iconItem)
     }
 
@@ -187,9 +190,11 @@ class IconAdapter(
     class IconViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val icon: ImageView = itemView.findViewById(R.id.icon)
         val tv_category: TextView = itemView.findViewById(R.id.icon_category)
+        val icon_view: CardView = itemView.findViewById(R.id.iconView)
         fun bind(iconItem: IconItem) {
             icon.setImageResource(iconItem.iconResId)
             tv_category.text = iconItem.text
+            icon_view.setCardBackgroundColor(iconItem.backgroundColor)
         }
     }
 }
