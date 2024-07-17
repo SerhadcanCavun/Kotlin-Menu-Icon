@@ -1,10 +1,10 @@
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.app.NotificationManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
-import android.media.Image.Plane
+import android.net.Uri
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
@@ -15,21 +15,26 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.project1.R
 import com.example.project1.IconItem
 
-class IconAdapter(private val iconList: List<IconItem>, private val context: Context) :
-    RecyclerView.Adapter<IconAdapter.IconViewHolder>() {
+class IconAdapter(
+    private val iconList: List<IconItem>,
+    private val context: Context,
+    private var soundMode: SoundMode,
+    private var rotateMode: RotateMode
+) : RecyclerView.Adapter<IconAdapter.IconViewHolder>() {
 
     private var isFlashOn = false
-    private var soundMode: SoundMode = SoundMode.NORMAL
-    private var rotateMode: RotateMode = RotateMode.ROTATE
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    }
+    private val notificationManager: NotificationManager by lazy {
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
     enum class SoundMode {
         NORMAL, VIBRATION, SILENT
     }
 
-    enum class RotateMode{
+    enum class RotateMode {
         ROTATE, PORTRAIT
     }
 
@@ -46,13 +51,9 @@ class IconAdapter(private val iconList: List<IconItem>, private val context: Con
             when (iconItem.text) {
                 "Wifi" -> openWifiSettings()
                 "Bluetooth" -> openBluetoothSetting()
-                "Light On" -> toggleLight(holder, iconItem)
-                "Light Off" -> toggleLight(holder, iconItem)
-                "Normal" -> toggleSoundMode(holder, iconItem)
-                "Vibration" ->toggleSoundMode(holder, iconItem)
-                "Silent" -> toggleSoundMode(holder, iconItem)
-                "Rotate" -> toggleRotateMode(holder, iconItem)
-                "Portrait" -> toggleRotateMode(holder, iconItem)
+                "Light On", "Light Off" -> toggleLight(holder, iconItem)
+                "Normal", "Vibration", "Silent" -> toggleSoundMode(holder, iconItem)
+                "Rotate", "Portrait" -> toggleRotateMode(holder, iconItem)
                 "Airplane Mod" -> openAirplaneModeSettings()
                 "Night Light" -> openNightLightSettings()
             }
@@ -71,40 +72,31 @@ class IconAdapter(private val iconList: List<IconItem>, private val context: Con
         context.startActivity(intent)
     }
 
-
     private fun toggleLight(holder: IconViewHolder, iconItem: IconItem) {
-        if(isFlashOn){
-                val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                try {
-                    val cameraId = cameraManager.cameraIdList[0]
-                    isFlashOn = !isFlashOn
-                    cameraManager.setTorchMode(cameraId, isFlashOn)
-                    holder.icon.setBackgroundColor(Color.parseColor("#ABCF37"))
-                } catch (e: CameraAccessException) {
-                    e.printStackTrace()
-                }
-                iconItem.iconResId = R.drawable.icon_light_off
-                iconItem.text = "Light Off"
-            }
-            else{
-                val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                try {
-                    val cameraId = cameraManager.cameraIdList[0]
-                    isFlashOn = !isFlashOn
-                    cameraManager.setTorchMode(cameraId, isFlashOn)
-                } catch (e: CameraAccessException) {
-                    e.printStackTrace()
-                }
-                iconItem.iconResId = R.drawable.icon_light_on
-                iconItem.text = "Light On"
-
-            }
-            holder.bind(iconItem)
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        try {
+            val cameraId = cameraManager.cameraIdList[0]
+            isFlashOn = !isFlashOn
+            cameraManager.setTorchMode(cameraId, isFlashOn)
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
         }
 
-
+        if (isFlashOn) {
+            iconItem.iconResId = R.drawable.icon_light_off
+            iconItem.text = "Light Off"
+        } else {
+            iconItem.iconResId = R.drawable.icon_light_on
+            iconItem.text = "Light On"
+        }
+        holder.bind(iconItem)
+    }
 
     private fun toggleSoundMode(holder: IconViewHolder, iconItem: IconItem) {
+        if (!notificationManager.isNotificationPolicyAccessGranted) {
+            requestNotificationPolicyAccess()
+            return
+        }
         when (soundMode) {
             SoundMode.NORMAL -> {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
@@ -112,7 +104,7 @@ class IconAdapter(private val iconList: List<IconItem>, private val context: Con
                 iconItem.iconResId = R.drawable.icon_vibration // Vibration icon
                 iconItem.text = "Vibration"
             }
-            SoundMode.VIBRATION-> {
+            SoundMode.VIBRATION -> {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
                 soundMode = SoundMode.SILENT
                 iconItem.iconResId = R.drawable.icon_silent // Mute icon
@@ -129,8 +121,8 @@ class IconAdapter(private val iconList: List<IconItem>, private val context: Con
         holder.bind(iconItem)
     }
 
-    private fun toggleRotateMode(holder: IconViewHolder, iconItem: IconItem){
-        when(rotateMode){
+    private fun toggleRotateMode(holder: IconViewHolder, iconItem: IconItem) {
+        when (rotateMode) {
             RotateMode.ROTATE -> {
                 disableAutoRotate()
                 rotateMode = RotateMode.PORTRAIT
@@ -181,10 +173,14 @@ class IconAdapter(private val iconList: List<IconItem>, private val context: Con
         context.startActivity(intent)
     }
 
+    private fun requestNotificationPolicyAccess() {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+        context.startActivity(intent)
+    }
 
     private fun requestWriteSettingsPermission() {
         val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-        intent.data = android.net.Uri.parse("package:${context.packageName}")
+        intent.data = Uri.parse("package:${context.packageName}")
         context.startActivity(intent)
     }
 
