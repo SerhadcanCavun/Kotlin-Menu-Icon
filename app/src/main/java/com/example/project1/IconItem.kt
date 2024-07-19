@@ -6,5 +6,8 @@ data class IconItem(
     var backgroundColor: Int,
     var isWifiOn: Boolean = false,
     var isBluetoothOn: Boolean = false,
-    var isAirplaneModeOn: Boolean = false
+    var isAirplaneModeOn: Boolean = false,
+    var isLocationOn: Boolean = false,
+    var isCellularOn: Boolean = false,
+    var isPowerModeOn: Boolean = false
 )

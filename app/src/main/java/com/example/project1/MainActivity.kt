@@ -10,10 +10,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
+import android.location.LocationManager
 import android.media.AudioManager
+import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.provider.Settings
+import android.telephony.PhoneStateListener
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -32,6 +35,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiStateReceiver: BroadcastReceiver
     private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
     private lateinit var airplaneModeReceiver: AirplaneModeReceiver
+    private lateinit var locationStateReceiver: LocationStateReceiver
+    private lateinit var cellularStateReceiver: CellularStateReceiver
+    private lateinit var powerModeReceiver: PowerModeReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +79,9 @@ class MainActivity : AppCompatActivity() {
         wifiStateReceiver = WifiStateReceiver(iconAdapter)
         bluetoothStateReceiver = BluetoothStateReceiver(iconAdapter)
         airplaneModeReceiver = AirplaneModeReceiver(iconAdapter)
+        locationStateReceiver = LocationStateReceiver(iconAdapter)
+        cellularStateReceiver = CellularStateReceiver(iconAdapter)
+        powerModeReceiver = PowerModeReceiver(iconAdapter)
         registerReceivers()
 
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -93,6 +102,12 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(bluetoothStateReceiver, bluetoothIntentFilter)
         val airplaneIntentFilter = IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED)
         registerReceiver(airplaneModeReceiver, airplaneIntentFilter)
+        val locationIntentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
+        registerReceiver(locationStateReceiver, locationIntentFilter)
+        val cellularIntentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        registerReceiver(cellularStateReceiver, cellularIntentFilter)
+        val powerModeIntentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        registerReceiver(powerModeReceiver, powerModeIntentFilter)
     }
 
     override fun onDestroy() {
@@ -101,5 +116,8 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(wifiStateReceiver)
         unregisterReceiver(bluetoothStateReceiver)
         unregisterReceiver(airplaneModeReceiver)
+        unregisterReceiver(locationStateReceiver)
+        unregisterReceiver(cellularStateReceiver)
+        unregisterReceiver(powerModeReceiver)
     }
 }

@@ -28,6 +28,9 @@ class IconAdapter(
     private var isWifiOn: Boolean = false
     private var isBluetoothOn: Boolean = false
     private var isAirplaneModeOn: Boolean = false
+    private var isLocationOn: Boolean = false
+    private var isCellularOn: Boolean = false
+    private var isPowerModeOn: Boolean = false
 
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -62,11 +65,41 @@ class IconAdapter(
                 "Rotate", "Portrait" -> toggleRotateMode(holder, iconItem)
                 "Airplane Mod" -> openAirplaneModeSettings()
                 "Night Light" -> openNightLightSettings()
+                "Location" -> openLocationSettings()
+                "Cellular" -> openCellular()
+                "Hotspot" -> openHotspotSettings()
+                "Qr Scanner" -> openQRScanner()
+                "Power Mode" -> togglePowerMode()
             }
         }
     }
 
     override fun getItemCount() = iconList.size
+
+    private fun openHotspotSettings() {
+        val intent = Intent(Settings.ACTION_DATA_ROAMING_SETTINGS)
+        context.startActivity(intent)
+    }
+
+    private fun openQRScanner() {
+        val intent = Intent(Settings.ACTION_DISPLAY_SETTINGS)
+        context.startActivity(intent)
+    }
+
+    private fun togglePowerMode() {
+        val intent = Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+        context.startActivity(intent)
+    }
+
+    private fun openCellular() {
+        val intent = Intent(Settings.ACTION_DATA_ROAMING_SETTINGS)
+        context.startActivity(intent)
+    }
+
+    private fun openLocationSettings() {
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        context.startActivity(intent)
+    }
 
     private fun openWifiSettings() {
         val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
@@ -259,6 +292,36 @@ class IconAdapter(
                 airplaneModeItem.backgroundColor = Color.WHITE
             }
             notifyItemChanged(airplaneModItem)
+        }
+    }
+
+    fun updateLocationState(isOn: Boolean) {
+        this.isLocationOn = isOn
+        val locationItemIndex = iconList.indexOfFirst {  it.text == "Location" }
+        if(locationItemIndex != -1) {
+            val locationItem = iconList[locationItemIndex]
+            locationItem.backgroundColor = if (isOn) Color.CYAN else Color.WHITE
+            notifyItemChanged(locationItemIndex)
+        }
+    }
+
+    fun updateCellularState(isOn: Boolean) {
+        this.isCellularOn = isOn
+        val cellularItemIndex = iconList.indexOfFirst { it.text == "Cellular" }
+        if(cellularItemIndex != -1) {
+            val cellularItem = iconList[cellularItemIndex]
+            cellularItem.backgroundColor = if(isOn) Color.CYAN else Color.WHITE
+            notifyItemChanged(cellularItemIndex)
+        }
+    }
+
+    fun updatePowerMode(isOn: Boolean) {
+        this.isPowerModeOn = isOn
+        val powerModeItemIndex = iconList.indexOfFirst {  it.text == "Power Mode" }
+        if(powerModeItemIndex != -1) {
+            val powerModeItem = iconList[powerModeItemIndex]
+            powerModeItem.backgroundColor = if(isOn) Color.CYAN else Color.WHITE
+            notifyItemChanged(powerModeItemIndex)
         }
     }
 
