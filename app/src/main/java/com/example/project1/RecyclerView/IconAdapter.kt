@@ -19,12 +19,16 @@ import com.example.project1.IconItem
 
 class IconAdapter(
     private val iconList: List<IconItem>,
-    private val context: Context,
-    private var soundMode: SoundMode,
-    private var rotateMode: RotateMode
+    private val context: Context
 ) : RecyclerView.Adapter<IconAdapter.IconViewHolder>() {
 
-    private var isFlashOn = false
+    private var soundMode = SoundMode.NORMAL
+    private var rotateMode = RotateMode.ROTATE
+    private var isFlashOn: Boolean = false
+    private var isWifiOn: Boolean = false
+    private var isBluetoothOn: Boolean = false
+    private var isAirplaneModeOn: Boolean = false
+
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
@@ -131,12 +135,14 @@ class IconAdapter(
                 rotateMode = RotateMode.PORTRAIT
                 iconItem.iconResId = R.drawable.icon_portrait
                 iconItem.text = "Portrait"
+                iconItem.backgroundColor = Color.WHITE
             }
             RotateMode.PORTRAIT -> {
                 enableAutoRotate()
                 rotateMode = RotateMode.ROTATE
                 iconItem.iconResId = R.drawable.icon_oto_rotate
                 iconItem.text = "Rotate"
+                iconItem.backgroundColor = Color.CYAN
             }
         }
         holder.bind(iconItem)
@@ -174,6 +180,86 @@ class IconAdapter(
     private fun openNightLightSettings() {
         val intent = Intent(Settings.ACTION_DISPLAY_SETTINGS)
         context.startActivity(intent)
+    }
+
+        fun updateSoundMode(newSoundMode: SoundMode) {
+        val soundItemIndex = iconList.indexOfFirst { it.text in listOf("Normal", "Vibration", "Silent") }
+        if (soundItemIndex != -1) {
+            val soundItem = iconList[soundItemIndex]
+            soundItem.iconResId = getSoundIconResId(newSoundMode)
+            soundItem.text = getSoundModeText(newSoundMode)
+            soundItem.backgroundColor = getSoundBackgroundColor(newSoundMode)
+            notifyItemChanged(soundItemIndex)
+        }
+    }
+
+    private fun getSoundIconResId(soundMode: SoundMode): Int {
+        return when (soundMode) {
+            SoundMode.NORMAL -> R.drawable.icon_normal
+            SoundMode.VIBRATION -> R.drawable.icon_vibration
+            SoundMode.SILENT -> R.drawable.icon_silent
+        }
+    }
+
+    private fun getSoundModeText(soundMode: SoundMode): String {
+        return when (soundMode) {
+            SoundMode.NORMAL -> "Normal"
+            SoundMode.VIBRATION -> "Vibration"
+            SoundMode.SILENT -> "Silent"
+        }
+    }
+
+    private fun getSoundBackgroundColor(soundMode: SoundMode): Int {
+        return when (soundMode) {
+            SoundMode.NORMAL -> Color.CYAN
+            SoundMode.VIBRATION -> Color.CYAN
+            SoundMode.SILENT -> Color.WHITE
+        }
+    }
+
+    fun updateBluetoothState(isOn: Boolean) {
+        isBluetoothOn = isOn
+        val bluetoothItemIndex = iconList.indexOfFirst { it.text == "Bluetooth" }
+        if(bluetoothItemIndex != -1){
+            val bluetoothItem = iconList[bluetoothItemIndex]
+            bluetoothItem.isBluetoothOn = isOn
+            if(isOn) {
+                bluetoothItem.backgroundColor = Color.CYAN
+            } else {
+                bluetoothItem.backgroundColor = Color.WHITE
+            }
+            notifyItemChanged(bluetoothItemIndex)
+        }
+    }
+
+    fun updateWifiState(isOn: Boolean) {
+        isWifiOn = isOn
+        val wifiItemIndex = iconList.indexOfFirst { it.text == "Wifi" }
+        if (wifiItemIndex != -1) {
+            val wifiItem = iconList[wifiItemIndex]
+            wifiItem.isWifiOn = isOn
+            if (isOn) {
+                wifiItem.backgroundColor = Color.CYAN
+            } else {
+                wifiItem.backgroundColor = Color.WHITE
+            }
+            notifyItemChanged(wifiItemIndex)
+        }
+    }
+
+    fun updateAirplaneMode(isOn: Boolean) {
+        this.isAirplaneModeOn = isOn
+        val airplaneModItem = iconList.indexOfFirst { it.text == "Airplane Mod" }
+        if(airplaneModItem != -1){
+            val airplaneModeItem = iconList[airplaneModItem]
+            airplaneModeItem.isAirplaneModeOn = isOn
+            if(isOn){
+                airplaneModeItem.backgroundColor = Color.CYAN
+            } else {
+                airplaneModeItem.backgroundColor = Color.WHITE
+            }
+            notifyItemChanged(airplaneModItem)
+        }
     }
 
     private fun requestNotificationPolicyAccess() {

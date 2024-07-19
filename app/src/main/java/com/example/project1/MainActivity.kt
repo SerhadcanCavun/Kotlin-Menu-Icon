@@ -1,25 +1,38 @@
 package com.example.project1
 
+import AirplaneModeReceiver
+import BluetoothStateReceiver
 import IconAdapter
+import WifiStateReceiver
+import android.bluetooth.BluetoothAdapter
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.graphics.Color
+import android.media.AudioManager
+import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.content.Context
-import android.graphics.Color
-import android.media.AudioManager
-import android.hardware.camera2.CameraManager
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var audioManager: AudioManager
-    private lateinit var cameraManager: CameraManager
-    private var isFlashOn: Boolean = true
     private lateinit var iconList: MutableList<IconItem>
+    private lateinit var soundModeReceiver: SoundModeReceiver
+    private lateinit var iconAdapter: IconAdapter
+    private lateinit var wifiStateReceiver: BroadcastReceiver
+    private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
+    private lateinit var airplaneModeReceiver: AirplaneModeReceiver
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -32,19 +45,14 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.rv)
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-
-
-        val initialSoundMode = getInitialSoundMode()
-        val initialLightMode = getInitialLightMode()
 
         iconList = mutableListOf(
             IconItem(R.drawable.icon_wifi_on, "Wifi", Color.WHITE),
-            IconItem(getSoundIconResId(initialSoundMode), getSoundModeText(initialSoundMode), getSoundBackgroundColor(initialSoundMode)),
-            IconItem(R.drawable.icon_oto_rotate, "Rotate", Color.WHITE),
+            IconItem(R.drawable.icon_normal, "Normal", Color.WHITE),
+            IconItem(R.drawable.icon_oto_rotate, "Rotate", Color.CYAN),
             IconItem(R.drawable.icon_bluetooth_on, "Bluetooth", Color.WHITE),
             IconItem(R.drawable.icon_airplane_on, "Airplane Mod", Color.WHITE),
-            IconItem(R.drawable.icon_light_on, "Light", getLightBackgroundColor()),
+            IconItem(R.drawable.icon_light_on, "Light", Color.WHITE),
             IconItem(R.drawable.icon_power_mode, "Power Mode", Color.WHITE),
             IconItem(R.drawable.icon_cellular_on, "Cellular", Color.WHITE),
             IconItem(R.drawable.icon_blue_light_filter, "Night Light", Color.WHITE),
@@ -54,51 +62,44 @@ class MainActivity : AppCompatActivity() {
         )
 
         recyclerView.layoutManager = GridLayoutManager(this, 4)
-        recyclerView.adapter = IconAdapter(iconList, this, initialSoundMode, IconAdapter.RotateMode.ROTATE)
-    }
+        iconAdapter = IconAdapter(iconList, this)
+        recyclerView.adapter = iconAdapter
 
-    private fun getInitialSoundMode(): IconAdapter.SoundMode {
-        return when (audioManager.ringerMode) {
-            AudioManager.RINGER_MODE_NORMAL -> IconAdapter.SoundMode.NORMAL
-            AudioManager.RINGER_MODE_VIBRATE -> IconAdapter.SoundMode.VIBRATION
-            AudioManager.RINGER_MODE_SILENT -> IconAdapter.SoundMode.SILENT
-            else -> IconAdapter.SoundMode.NORMAL
+        soundModeReceiver = SoundModeReceiver { newSoundMode ->
+            runOnUiThread {
+                iconAdapter.updateSoundMode(newSoundMode)
+            }
+        }
+        wifiStateReceiver = WifiStateReceiver(iconAdapter)
+        bluetoothStateReceiver = BluetoothStateReceiver(iconAdapter)
+        airplaneModeReceiver = AirplaneModeReceiver(iconAdapter)
+        registerReceivers()
+
+        val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        if (mBluetoothAdapter == null) {
+            // Device does not support Bluetooth
+        } else {
+            iconAdapter.updateBluetoothState(mBluetoothAdapter.isEnabled())
         }
     }
 
-    private fun getSoundIconResId(soundMode: IconAdapter.SoundMode): Int {
-        return when (soundMode) {
-            IconAdapter.SoundMode.NORMAL -> R.drawable.icon_normal
-            IconAdapter.SoundMode.VIBRATION -> R.drawable.icon_vibration
-            IconAdapter.SoundMode.SILENT -> R.drawable.icon_silent
-        }
+
+    private fun registerReceivers() {
+        val soundFilter = IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION)
+        registerReceiver(soundModeReceiver, soundFilter)
+        val wifiFilter = IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
+        registerReceiver(wifiStateReceiver, wifiFilter)
+        val bluetoothIntentFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        registerReceiver(bluetoothStateReceiver, bluetoothIntentFilter)
+        val airplaneIntentFilter = IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+        registerReceiver(airplaneModeReceiver, airplaneIntentFilter)
     }
 
-    private fun getSoundModeText(soundMode: IconAdapter.SoundMode): String {
-        return when (soundMode) {
-            IconAdapter.SoundMode.NORMAL -> "Normal"
-            IconAdapter.SoundMode.VIBRATION -> "Vibration"
-            IconAdapter.SoundMode.SILENT -> "Silent"
-        }
-    }
-
-    private fun getSoundBackgroundColor(soundMode: IconAdapter.SoundMode): Int {
-        return when(soundMode) {
-            IconAdapter.SoundMode.NORMAL -> Color.CYAN
-            IconAdapter.SoundMode.VIBRATION -> Color.CYAN
-            IconAdapter.SoundMode.SILENT -> Color.WHITE
-        }
-    }
-
-    private fun getInitialLightMode(): Boolean {
-        return true
-    }
-
-    private fun getLightBackgroundColor(): Int {
-        if(isFlashOn){
-            return Color.WHITE
-        }else{
-            return Color.CYAN
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(soundModeReceiver)
+        unregisterReceiver(wifiStateReceiver)
+        unregisterReceiver(bluetoothStateReceiver)
+        unregisterReceiver(airplaneModeReceiver)
     }
 }
