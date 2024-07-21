@@ -6,12 +6,14 @@ import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.project1.R
@@ -30,7 +32,6 @@ class IconAdapter(
     private var isAirplaneModeOn: Boolean = false
     private var isLocationOn: Boolean = false
     private var isCellularOn: Boolean = false
-    private var isPowerModeOn: Boolean = false
 
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -52,6 +53,7 @@ class IconAdapter(
         return IconViewHolder(view)
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onBindViewHolder(holder: IconViewHolder, position: Int) {
         val iconItem = iconList[position]
         holder.bind(iconItem)
@@ -68,7 +70,6 @@ class IconAdapter(
                 "Location" -> openLocationSettings()
                 "Cellular" -> openCellular()
                 "Hotspot" -> openHotspotSettings()
-                "Qr Scanner" -> openQRScanner()
                 "Power Mode" -> togglePowerMode()
             }
         }
@@ -77,12 +78,11 @@ class IconAdapter(
     override fun getItemCount() = iconList.size
 
     private fun openHotspotSettings() {
-        val intent = Intent(Settings.ACTION_DATA_ROAMING_SETTINGS)
-        context.startActivity(intent)
-    }
-
-    private fun openQRScanner() {
-        val intent = Intent(Settings.ACTION_DISPLAY_SETTINGS)
+        val intent = Intent(Intent.ACTION_MAIN)
+        intent.setClassName(
+            "com.android.settings",
+            "com.android.settings.TetherSettings"
+        )
         context.startActivity(intent)
     }
 
@@ -101,8 +101,9 @@ class IconAdapter(
         context.startActivity(intent)
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun openWifiSettings() {
-        val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
+        val intent = Intent(Settings.Panel.ACTION_WIFI)
         context.startActivity(intent)
     }
 
@@ -300,7 +301,7 @@ class IconAdapter(
         val locationItemIndex = iconList.indexOfFirst {  it.text == "Location" }
         if(locationItemIndex != -1) {
             val locationItem = iconList[locationItemIndex]
-            locationItem.backgroundColor = if (isOn) Color.CYAN else Color.WHITE
+            locationItem.backgroundColor = if(isOn) Color.CYAN else Color.WHITE
             notifyItemChanged(locationItemIndex)
         }
     }
@@ -315,13 +316,20 @@ class IconAdapter(
         }
     }
 
-    fun updatePowerMode(isOn: Boolean) {
-        this.isPowerModeOn = isOn
-        val powerModeItemIndex = iconList.indexOfFirst {  it.text == "Power Mode" }
-        if(powerModeItemIndex != -1) {
-            val powerModeItem = iconList[powerModeItemIndex]
-            powerModeItem.backgroundColor = if(isOn) Color.CYAN else Color.WHITE
-            notifyItemChanged(powerModeItemIndex)
+    fun updateRotateMode(isAutoRotate: Boolean) {
+        val rotateItemIndex = iconList.indexOfFirst { it.text == "Rotate" || it.text == "Portrait" }
+        if (rotateItemIndex != -1) {
+            val rotateItem = iconList[rotateItemIndex]
+            if (isAutoRotate) {
+                rotateItem.iconResId = R.drawable.icon_oto_rotate // Auto-Rotate ikonu
+                rotateItem.text = "Rotate"
+                rotateItem.backgroundColor = Color.CYAN
+            } else {
+                rotateItem.iconResId = R.drawable.icon_portrait // Portrait ikonu
+                rotateItem.text = "Portrait"
+                rotateItem.backgroundColor = Color.WHITE
+            }
+            notifyItemChanged(rotateItemIndex)
         }
     }
 
