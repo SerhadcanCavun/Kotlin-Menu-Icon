@@ -103,7 +103,7 @@ class IconAdapter(
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun openWifiSettings() {
-        val intent = Intent(Settings.Panel.ACTION_WIFI)
+        val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
         context.startActivity(intent)
     }
 
