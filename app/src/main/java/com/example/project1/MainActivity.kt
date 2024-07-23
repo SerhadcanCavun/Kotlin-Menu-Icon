@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationStateReceiver: LocationStateReceiver
     private lateinit var cellularStateReceiver: CellularStateReceiver
     private lateinit var rotateModeObserver: RotateModeObserver
+    private lateinit var hotspotBroadcastReceiver: HotspotBroadcastReceiver
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         airplaneModeReceiver = AirplaneModeReceiver(iconAdapter)
         locationStateReceiver = LocationStateReceiver(iconAdapter)
         cellularStateReceiver = CellularStateReceiver(iconAdapter)
+        hotspotBroadcastReceiver = HotspotBroadcastReceiver(iconAdapter)
         registerReceivers()
 
         val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -147,6 +149,8 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(locationStateReceiver, locationIntentFilter)
         val cellularIntentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
         registerReceiver(cellularStateReceiver, cellularIntentFilter)
+        val hotspotIntentFilter = IntentFilter("android.net.wifi.WIFI_AP_STATE_CHANGED")
+        registerReceiver(hotspotBroadcastReceiver, hotspotIntentFilter)
     }
 
     override fun onDestroy() {
@@ -157,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         unregisterReceiver(airplaneModeReceiver)
         unregisterReceiver(locationStateReceiver)
         unregisterReceiver(cellularStateReceiver)
+        unregisterReceiver(hotspotBroadcastReceiver)
         contentResolver.unregisterContentObserver(rotateModeObserver)
     }
 }

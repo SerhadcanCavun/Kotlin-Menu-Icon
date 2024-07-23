@@ -32,6 +32,7 @@ class IconAdapter(
     private var isAirplaneModeOn: Boolean = false
     private var isLocationOn: Boolean = false
     private var isCellularOn: Boolean = false
+    private var isHotspotActive: Boolean = false
 
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -330,6 +331,16 @@ class IconAdapter(
                 rotateItem.backgroundColor = Color.WHITE
             }
             notifyItemChanged(rotateItemIndex)
+        }
+    }
+
+    fun updateHotspotMode(isHotspotActive: Boolean) {
+        this.isHotspotActive = isHotspotActive
+        val hotspotItemIndex = iconList.indexOfFirst { it.text == "Hotspot" }
+        if (hotspotItemIndex != -1) {
+            val hotspotItem = iconList[hotspotItemIndex]
+            hotspotItem.backgroundColor = if (isHotspotActive) Color.CYAN else Color.WHITE
+            notifyItemChanged(hotspotItemIndex)
         }
     }
 

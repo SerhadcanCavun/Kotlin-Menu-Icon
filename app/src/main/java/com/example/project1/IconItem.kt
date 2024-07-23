@@ -9,5 +9,6 @@ data class IconItem(
     var isAirplaneModeOn: Boolean = false,
     var isLocationOn: Boolean = false,
     var isCellularOn: Boolean = false,
-    var isPowerModeOn: Boolean = false
+    var isPowerModeOn: Boolean = false,
+    var isHotspotActive: Boolean = false
 )
